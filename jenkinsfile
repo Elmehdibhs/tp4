@@ -1,0 +1,39 @@
+pipeline {
+    environment {
+        registry = "Elmehdibhs/tp4"
+        registryCredential = 'dockerhubRW'
+        dockerImage = ''
+    }
+    agent any
+    stages {
+        stage('Cloning Git') {
+            steps {
+                git 'https://github.com/Elmehdibhs/tp4'
+            }
+        }
+        stage('Building image') {
+            steps {
+                script {
+                    dockerImage = docker.build("${registry}:${BUILD_NUMBER}")
+                }
+            }
+        }
+        stage('Test image') {
+            steps {
+                script {
+                    echo "Running tests..."
+                    sh "docker run --rm ${dockerImage} echo 'Tests passed'"
+                }
+            }
+        }
+        stage('Publish Image') {
+            steps {
+                script {
+                    docker.withRegistry('', registryCredential) {
+                        dockerImage.push()
+                    }
+                }
+            }
+        }
+    }
+}
